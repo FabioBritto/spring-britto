@@ -28,6 +28,12 @@ public class BrittoSpringWebApplication {
 			 * Aqui eu redireciono TODA E QUALQUER URL para o meu Servlet
 			 */
 			context.addServletMappingDecoded("/*", "BrittoDispatchServlet");
+			
+			/*
+			 * getServer().await() -> Ele fica em modo "bloqueando" esperando as requisições
+			 */
+			tomcat.start();
+			tomcat.getServer().await();
 		}
 		catch(Exception ex) {
 			ex.printStackTrace();
