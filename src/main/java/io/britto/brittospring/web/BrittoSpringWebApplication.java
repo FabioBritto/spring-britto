@@ -6,11 +6,20 @@ import org.apache.catalina.Context;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.startup.Tomcat;
 
+import io.britto.brittospring.util.BrittoLogger;
+
 public class BrittoSpringWebApplication {
 
 	public static void run() {
 		
+		//Zerando o log do Apache Tomcat
+		java.util.logging.Logger.getLogger("org.apache").setLevel(java.util.logging.Level.OFF);
+		long inicio, fim;
+		
 		try {
+			inicio = System.currentTimeMillis();
+			BrittoLogger.log("Main Module", "Starting Spring Britto Application");
+			BrittoLogger.showBanner();
 			Tomcat tomcat = new Tomcat();
 			
 			Connector connector = new Connector();
@@ -33,7 +42,13 @@ public class BrittoSpringWebApplication {
 			 * getServer().await() -> Ele fica em modo "bloqueando" esperando as requisições
 			 */
 			tomcat.start();
+			
+			fim = System.currentTimeMillis();
+			BrittoLogger.log("Main Module", "Spring Britto Web Application starten in " + ((double) (fim-inicio) / 1000) + " seconds");
+			
 			tomcat.getServer().await();
+			
+			
 		}
 		catch(Exception ex) {
 			ex.printStackTrace();
