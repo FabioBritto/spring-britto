@@ -11,6 +11,8 @@ import org.apache.catalina.startup.Tomcat;
 
 import io.britto.brittospring.annotations.BrittoGetMethod;
 import io.britto.brittospring.annotations.BrittoPostMethod;
+import io.britto.brittospring.datastructures.ControllersMap;
+import io.britto.brittospring.datastructures.RequestControllerData;
 import io.britto.brittospring.explorer.ClassExplorer;
 import io.britto.brittospring.util.BrittoLogger;
 
@@ -82,10 +84,19 @@ public class BrittoSpringWebApplication {
 				}
 			}
 		}
+		/*
+		 * Vou percorrer minha Estrutura de Dados
+		 */
+		for(RequestControllerData item : ControllersMap.values.values()) {
+			BrittoLogger.log("","     " + item.httpMethod + ": " + item.url + ": [" + item.controllerClass + "." + item.controllerMethod + "]");
+		}
 
 	}
 
 	private static void extractMethods(String className) throws Exception {
+		
+		String httpMethod = "";
+		String path = "";
 		
 		/*
 		 * Recuperação de todos os métodos da classe
@@ -99,14 +110,21 @@ public class BrittoSpringWebApplication {
 				 * SE o meu método está anotado com BrittoGetMehtod, eu pego o valor de sua anotação e exibo no LOG
 				 */
 				if(annotation.annotationType().getName().equals("io.britto.brittospring.annotations.BrittoGetMethod")) {
-					String path = ((BrittoGetMethod)annotation).value(); 
-					BrittoLogger.log("", "   + method " + method.getName() + "  - URL GET = " + path);	
+					httpMethod = "GET";
+					path = ((BrittoGetMethod)annotation).value(); 
+					//BrittoLogger.log("", "   + method " + method.getName() + "  - URL GET = " + path);
 				}
 				else if(annotation.annotationType().getName().equals("io.britto.brittospring.annotations.BrittoPostMethod")) {
-					String path = ((BrittoPostMethod)annotation).value(); 
-					BrittoLogger.log("", "   + method " + method.getName() + "  - URL POST = " + path);	
+					httpMethod = "POST";
+					path = ((BrittoPostMethod)annotation).value(); 
+					//BrittoLogger.log("", "   + method " + method.getName() + "  - URL POST = " + path);
 				}
+				RequestControllerData getData = new RequestControllerData(httpMethod, path, className, method.getName());
+				/*
+				 * Verbo HTTP + caminho/path me darão a informação de qual classe e método
+				 */
+				ControllersMap.values.put(httpMethod + path, getData);
 			}
 		}
-	}
+	}	
 }
