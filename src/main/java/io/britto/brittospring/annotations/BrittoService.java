@@ -6,8 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.PARAMETER)
-public @interface BrittoBody {
+@Target(ElementType.TYPE)
+public @interface BrittoService {
 
-	
 }

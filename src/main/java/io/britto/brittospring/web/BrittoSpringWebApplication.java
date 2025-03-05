@@ -1,12 +1,16 @@
 package io.britto.brittospring.web;
 
 import java.io.File;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
 import java.util.List;
 
 import org.apache.catalina.Context;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.startup.Tomcat;
 
+import io.britto.brittospring.annotations.BrittoGetMethod;
+import io.britto.brittospring.annotations.BrittoPostMethod;
 import io.britto.brittospring.explorer.ClassExplorer;
 import io.britto.brittospring.util.BrittoLogger;
 
@@ -20,21 +24,12 @@ public class BrittoSpringWebApplication {
 
 		try {
 			inicio = System.currentTimeMillis();
-			BrittoLogger.log("Embeded Web Container", "Starting Spring Britto Application");
-			BrittoLogger.showBanner();
-			
-			/*
-			 * Class Explorer
-			 */
-			List<String> allClasses = ClassExplorer.retrieveAllClasses(sourceClass);
 
-			for (String s : allClasses) {
-				BrittoLogger.log("Class Explorer: ", "Class Found: " + s);
-			}
-			/*
-			 * End of Class Explorer
-			 */
-			
+			BrittoLogger.showBanner();
+
+			BrittoLogger.log("Embeded Web Container", "Starting Spring Britto Application");
+			extractMetaData(sourceClass);
+
 			Tomcat tomcat = new Tomcat();
 
 			Connector connector = new Connector();
@@ -66,6 +61,52 @@ public class BrittoSpringWebApplication {
 
 		} catch (Exception ex) {
 			ex.printStackTrace();
+		}
+	}
+
+	private static void extractMetaData(Class<?> sourceClass) throws Exception {
+
+		List<String> allClasses = ClassExplorer.retrieveAllClasses(sourceClass);
+
+		for (String brittoClass : allClasses) {
+			/*
+			 * Recuperação das Annotations da Classe
+			 */
+			Annotation[] annotations = Class.forName(brittoClass).getAnnotations();
+
+			for (Annotation classAnnotation : annotations) {
+				if (classAnnotation.annotationType().getName()
+						.equals("io.britto.brittospring.annotations.BrittoController")) {
+					BrittoLogger.log("Metadata Explorer", "Found a Controller: " + brittoClass);
+					extractMethods(brittoClass);
+				}
+			}
+		}
+
+	}
+
+	private static void extractMethods(String className) throws Exception {
+		
+		/*
+		 * Recuperação de todos os métodos da classe
+		 */
+		for(Method method: Class.forName(className).getDeclaredMethods()) {
+			/*
+			 * Para cada método, recupero todas as suas anotações
+			 */
+			for(Annotation annotation : method.getAnnotations()) {
+				/*
+				 * SE o meu método está anotado com BrittoGetMehtod, eu pego o valor de sua anotação e exibo no LOG
+				 */
+				if(annotation.annotationType().getName().equals("io.britto.brittospring.annotations.BrittoGetMethod")) {
+					String path = ((BrittoGetMethod)annotation).value(); 
+					BrittoLogger.log("", "   + method " + method.getName() + "  - URL GET = " + path);	
+				}
+				else if(annotation.annotationType().getName().equals("io.britto.brittospring.annotations.BrittoPostMethod")) {
+					String path = ((BrittoPostMethod)annotation).value(); 
+					BrittoLogger.log("", "   + method " + method.getName() + "  - URL POST = " + path);	
+				}
+			}
 		}
 	}
 }
