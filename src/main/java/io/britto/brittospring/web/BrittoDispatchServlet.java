@@ -1,8 +1,13 @@
 package io.britto.brittospring.web;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
+
+import com.google.gson.Gson;
 
 import io.britto.brittospring.datastructures.ControllersInstances;
 import io.britto.brittospring.datastructures.ControllersMap;
@@ -23,6 +28,10 @@ public class BrittoDispatchServlet extends HttpServlet {
 		if(request.getRequestURL().toString().endsWith("/favicon.ico")) {
 			return;
 		}
+		
+		PrintWriter out = new PrintWriter(response.getWriter());
+		Gson gson = new Gson();
+		
 		
 		String url = request.getRequestURI();
 		String httpMethod = request.getMethod().toUpperCase();
@@ -53,7 +62,7 @@ public class BrittoDispatchServlet extends HttpServlet {
 			 * O método a ser extraído, é o método que irá atender à requisição
 			 * 
 			 * No método abaixo, eu basicamente percorro a lista de métodos maepados. Se algum deles bater com o método da 
-			 * requisição, então existe correspondência
+			 * requisição, então existe corr espondência
 			 */
 			
 			Method controllerMethod = null;
@@ -63,20 +72,52 @@ public class BrittoDispatchServlet extends HttpServlet {
 					break;
 				}
 			}
+			BrittoLogger.log("DispatcherServlet", "Invoking method: " + controllerMethod.getName() + " to handle Request");
+			
+			/*
+			 * Meu método tem parâmetros?
+			 */
+			if(controllerMethod.getParameterCount() > 0) {
+				BrittoLogger.log("BrittoDispatchServlet", "Method " + controllerMethod.getName() + " has parameters");
+				Object arg;
+				Parameter parameter = controllerMethod.getParameters()[0];
+				if(parameter.getAnnotations()[0].annotationType().getName().equals("io.britto.brittospring.annotations.BrittoBody")) {
+					String body = readBytesFromRequest(request);
+					/*
+					 * Preciso ler os dados que vêm da Requisição
+					 */
+					BrittoLogger.log("", "     Found Parameter from Request of type " + parameter.getType().getName());
+					BrittoLogger.log("", "     Parameter content: " +  body);
+					arg = gson.fromJson(body, parameter.getType());
+					
+					out.println(gson.toJson(controllerMethod.invoke(controller, arg)));
+				}
+				else {
+					out.println(gson.toJson(controllerMethod.invoke(controller)));
+				}
+			}
+			
+			
 			/*
 			 * Eu invoco o método a partir da instância criada
 			 */
-			BrittoLogger.log("DispatcherServlet", "Invoking method: " + controllerMethod.getName() + " to handle Request");
-			PrintWriter out = new PrintWriter(response.getWriter());
-			out.println(controllerMethod.invoke(controller));
+			
 			out.close();
 		}
 		catch(Exception e) {
 			e.printStackTrace();
 		}
+	}
+	
+	private String readBytesFromRequest(HttpServletRequest request) throws Exception {
+		StringBuilder str = new StringBuilder();
 		
+		String line;
+		BufferedReader br = new BufferedReader(new InputStreamReader(request.getInputStream()));
 		
-		
-		
+		while((line = br.readLine()) != null) {
+			str.append(line);
+		}
+		return str.toString();
 	}
 }
