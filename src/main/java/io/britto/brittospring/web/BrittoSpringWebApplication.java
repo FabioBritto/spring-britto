@@ -13,6 +13,7 @@ import io.britto.brittospring.annotations.BrittoGetMethod;
 import io.britto.brittospring.annotations.BrittoPostMethod;
 import io.britto.brittospring.datastructures.ControllersMap;
 import io.britto.brittospring.datastructures.RequestControllerData;
+import io.britto.brittospring.datastructures.ServiceImplMap;
 import io.britto.brittospring.explorer.ClassExplorer;
 import io.britto.brittospring.util.BrittoLogger;
 
@@ -82,14 +83,23 @@ public class BrittoSpringWebApplication {
 					BrittoLogger.log("Metadata Explorer", "Found a Controller: " + brittoClass);
 					extractMethods(brittoClass);
 				}
+				else if(classAnnotation.annotationType().getName().equals("io.britto.brittospring.annotations.BrittoService")) {
+					BrittoLogger.log("Metadata Explorer", "Found a Service Implementation " + brittoClass);		
+					
+					for(Class<?> interf : Class.forName(brittoClass).getInterfaces()) {
+						BrittoLogger.log("Metadata Explorer","        Class Implements: " + interf.getName());
+						ServiceImplMap.implementations.put(interf.getName(), brittoClass);
+					}
+				}
 			}
 		}
 		/*
 		 * Vou percorrer minha Estrutura de Dados
-		 */
+		 
 		for(RequestControllerData item : ControllersMap.values.values()) {
 			BrittoLogger.log("","     " + item.httpMethod + ": " + item.url + ": [" + item.controllerClass + "." + item.controllerMethod + "]");
 		}
+		*/
 
 	}
 

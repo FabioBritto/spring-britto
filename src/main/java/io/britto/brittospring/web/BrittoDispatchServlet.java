@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 
@@ -11,7 +12,9 @@ import com.google.gson.Gson;
 
 import io.britto.brittospring.datastructures.ControllersInstances;
 import io.britto.brittospring.datastructures.ControllersMap;
+import io.britto.brittospring.datastructures.DependencyInjectionMap;
 import io.britto.brittospring.datastructures.RequestControllerData;
+import io.britto.brittospring.datastructures.ServiceImplMap;
 import io.britto.brittospring.util.BrittoLogger;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
@@ -55,6 +58,8 @@ public class BrittoDispatchServlet extends HttpServlet {
 				BrittoLogger.log("DispatcherServlet", "Crating new Controller Instance");
 				controller = Class.forName(data.controllerClass).getDeclaredConstructor().newInstance();
 				ControllersInstances.instances.put(data.controllerClass, controller);
+				
+				injectDependencies(controller);
 			}
 			
 			/*
@@ -81,8 +86,11 @@ public class BrittoDispatchServlet extends HttpServlet {
 				BrittoLogger.log("BrittoDispatchServlet", "Method " + controllerMethod.getName() + " has parameters");
 				Object arg;
 				Parameter parameter = controllerMethod.getParameters()[0];
+
+				
 				if(parameter.getAnnotations()[0].annotationType().getName().equals("io.britto.brittospring.annotations.BrittoBody")) {
 					String body = readBytesFromRequest(request);
+					System.out.println(body.toString());
 					/*
 					 * Preciso ler os dados que vêm da Requisição
 					 */
@@ -119,5 +127,37 @@ public class BrittoDispatchServlet extends HttpServlet {
 			str.append(line);
 		}
 		return str.toString();
+	}
+	
+	private void injectDependencies(Object client) throws Exception {
+		for(Field f : client.getClass().getDeclaredFields()) {
+			String attrType = f.getType().getName();
+			BrittoLogger.log("BrittoDispatchServlet", "Injected " + f.getName() + " Field has type " + attrType);
+			
+			Object serviceImpl;
+			
+			if(DependencyInjectionMap.objects.get(attrType) == null) { 
+				//Se não houver pela declaração da interface...
+				BrittoLogger.log("Dependency Injection", "Couldn't find Instance for " + attrType);
+				String implType = ServiceImplMap.implementations.get(attrType);
+				//Buscando pela declaração da implementação
+				if(implType != null) {
+					BrittoLogger.log("Dependency Injection", "Found Instance for " + implType);
+					//Se encontrei declaraçãp pela implementação, preciso ver se existe alguma instância
+					serviceImpl = DependencyInjectionMap.objects.get(implType);
+					if(serviceImpl == null) {
+						BrittoLogger.log("Dependency Injection", "Injecting new Object");
+						//Se não houver, eu crio uma instância
+						serviceImpl =  Class.forName(implType).getDeclaredConstructor().newInstance();
+						DependencyInjectionMap.objects.put(implType, serviceImpl);
+					}
+					//Agora preciso atribuir esta instância ao atributo
+					f.setAccessible(true);
+					f.set(client, serviceImpl);
+					BrittoLogger.log("Dependency Injection", "Injected Object sucessfully");
+				}
+			}
+			
+		}
 	}
 }
