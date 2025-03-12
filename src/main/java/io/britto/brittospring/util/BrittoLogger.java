@@ -3,6 +3,12 @@ package io.britto.brittospring.util;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+/*
+ * Classe responsável pela exibição das informações. O objetivo aqui é gerar um log parecido com o do próprio
+ * Spring Boot. 
+ * São declarados atributos String correspondentes aos seus códigos de escape ANSI para representação de cores em terminais.
+ */
+
 public class BrittoLogger {
 
 	public static final String GREEN  = "\u001B[32m";
@@ -23,6 +29,11 @@ public class BrittoLogger {
 		System.out.println(RESET);
 	}
 	
+	/*
+	 * O método "log" recebe como parâmetro:
+	 * - String modulo   -> Diz respeito a qual módulo está sendo tratado
+	 * - String mensagem -> Qual a mensagem referente ao módulo tratado
+	 */
 	public static void log(String modulo, String mensagem) {
 		
 		

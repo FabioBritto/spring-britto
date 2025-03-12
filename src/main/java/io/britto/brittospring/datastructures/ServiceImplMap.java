@@ -2,7 +2,7 @@ package io.britto.brittospring.datastructures;
 
 import java.util.HashMap;
 /*
- * Classe que me fornece as informações de
+ * Classe que me fornece as informações:
  * - Qual é a interface
  * - Quem a implementa
  */

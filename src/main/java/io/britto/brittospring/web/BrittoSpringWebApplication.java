@@ -19,6 +19,21 @@ import io.britto.brittospring.util.BrittoLogger;
 
 public class BrittoSpringWebApplication {
 
+	/*
+	 * O método "run" é o primeiro método a ser chamado (assim como em uma aplicação Spring Boot).
+	 * Ele recebe como parâmetro a classe base/raiz do projeto.
+	 * 
+	 * Para o Tomcat, existe um diretório chamado "webapps", onde são colocadas as pastas dos meus projetos.
+	 * Aqui, é definido como Context, o diretório atual do projeto. Com isso, determino que ele procure
+	 * pastas aqui.
+	 * 
+	 * Com "context.addServletMappingDecoded" é defino que tudo o que for digitado na URL,
+	 * será capturado pelo meu único GRANDE SERVLET adicionado ao meu Tomcat: BrittoDispatcherServlet. 
+	 * 
+	 * As variáveis "inicio" e "fim" existem para registrar o início e fim da inicialização da aplicação
+	 * 
+	 * "tomcat.getServer().await()" coloca o Tomcat em modo de "aguardo" de novas requisições
+	 */
 	public static void run(Class<?> sourceClass) {
 
 		// Zerando o log do Apache Tomcat
@@ -40,20 +55,11 @@ public class BrittoSpringWebApplication {
 			BrittoLogger.log("Embede Web Container", "Web Container started on port 8080");
 			tomcat.setConnector(connector);
 
-			/*
-			 * new File(".").getAbsolutePath() -> Procura classes no diretório atual
-			 */
 			Context context = tomcat.addContext("", new File(".").getAbsolutePath());
 
 			Tomcat.addServlet(context, "BrittoDispatchServlet", new BrittoDispatchServlet());
-			/*
-			 * Aqui eu redireciono TODA E QUALQUER URL para o meu Servlet
-			 */
 			context.addServletMappingDecoded("/*", "BrittoDispatchServlet");
 
-			/*
-			 * getServer().await() -> Ele fica em modo "bloqueando" esperando as requisições
-			 */
 			tomcat.start();
 
 			fim = System.currentTimeMillis();
@@ -67,6 +73,14 @@ public class BrittoSpringWebApplication {
 		}
 	}
 
+	/*
+	 * Com o uso da API Reflection, é possível fazer a recuperação dos metadados de cada classe.
+	 * Dessa forma, são capturadas todas as anotações, percorrendo inicialmente todas as classes.
+	 * Depois, é percorrido um vetor de anotações atrás de anotações @BrittoController e @BrittoService
+	 * Esta verificação é feita comparando o "annotationType()" de cada anotação com o path final ".BrittoController"
+	 * O mesmo é feito para o final ".BrittoService"
+	 * Uma vez encontrada uma classe @BrittoController, é chamado o método "extractMethods()".
+	 */
 	private static void extractMetaData(Class<?> sourceClass) throws Exception {
 
 		List<String> allClasses = ClassExplorer.retrieveAllClasses(sourceClass);
@@ -93,46 +107,37 @@ public class BrittoSpringWebApplication {
 				}
 			}
 		}
-		/*
-		 * Vou percorrer minha Estrutura de Dados
-		 
-		for(RequestControllerData item : ControllersMap.values.values()) {
-			BrittoLogger.log("","     " + item.httpMethod + ": " + item.url + ": [" + item.controllerClass + "." + item.controllerMethod + "]");
-		}
-		*/
-
 	}
 
+	/*
+	 * Uma vez recebida a classe por parâmetro (className), é percorrida a lista de métodos contidos nesta classe.
+	 * Se este método foi chamado, é porque se trata de uma requisição "capturada" por um @BrittoController.
+	 * Portanto, são percorridos os métodos. Para cada método, são recuperadas as anotações. Ao percorrer, verifico se
+	 * estou a anotação equivale a "BrittoGetMethod" ou "BrittoPostMethod". Se for o caso, as variáveis "httpMethdo" e
+	 * "path" são preenchidas.
+	 * No final, eu crio uma instância de RequestControllerData passando como parâmetro: className, o nome do método e
+	 * os valores das duas variáveis (httpMethdo e path). Depois disso, o controller em questão é adicionado 
+	 * ao Map de Controllers.
+	 * 
+	 */
 	private static void extractMethods(String className) throws Exception {
 		
 		String httpMethod = "";
 		String path = "";
 		
-		/*
-		 * Recuperação de todos os métodos da classe
-		 */
 		for(Method method: Class.forName(className).getDeclaredMethods()) {
-			/*
-			 * Para cada método, recupero todas as suas anotações
-			 */
+			
 			for(Annotation annotation : method.getAnnotations()) {
-				/*
-				 * SE o meu método está anotado com BrittoGetMehtod, eu pego o valor de sua anotação e exibo no LOG
-				 */
+				
 				if(annotation.annotationType().getName().equals("io.britto.brittospring.annotations.BrittoGetMethod")) {
 					httpMethod = "GET";
 					path = ((BrittoGetMethod)annotation).value(); 
-					//BrittoLogger.log("", "   + method " + method.getName() + "  - URL GET = " + path);
 				}
 				else if(annotation.annotationType().getName().equals("io.britto.brittospring.annotations.BrittoPostMethod")) {
 					httpMethod = "POST";
 					path = ((BrittoPostMethod)annotation).value(); 
-					//BrittoLogger.log("", "   + method " + method.getName() + "  - URL POST = " + path);
 				}
 				RequestControllerData getData = new RequestControllerData(httpMethod, path, className, method.getName());
-				/*
-				 * Verbo HTTP + caminho/path me darão a informação de qual classe e método
-				 */
 				ControllersMap.values.put(httpMethod + path, getData);
 			}
 		}

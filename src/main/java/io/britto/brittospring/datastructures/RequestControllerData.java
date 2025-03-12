@@ -1,5 +1,13 @@
 package io.britto.brittospring.datastructures;
 
+/*
+ * Classe criada com a finalidade de armazenar dados de uma requisição ao Controller.
+ * httpMethod       -> Qual o método utilizado na requisição (GET ou POST)
+ * url              -> Qual foi a ENDPOINT usada para acessar a URL
+ * controllerClass  -> Qual foi a Classe @BrittoController
+ * controllerMethod -> Qual método responderá à requisição
+ */
+
 public class RequestControllerData {
 
 	public String httpMethod;

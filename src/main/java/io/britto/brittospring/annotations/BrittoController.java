@@ -7,8 +7,9 @@ import java.lang.annotation.Target;
 
 
 /*
- * Com @Retention eu defino que será uma anotação para rodar em tempo de execução
- * Com @Target eu defino que será aplicado a uma instância de uma classe
+ * Com @Retention(RetentionPolicy.RUNTIME) eu defino que será uma anotação para atuar em tempo de execução
+ * Com @Target(ElementType.TYPE) eu defino que será aplicado a uma classe/a um tipo. Ou seja, sendo uma 
+ * anotação referente à classe, eu anoto na declaração da mesma (como é feito com @RestController)
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)

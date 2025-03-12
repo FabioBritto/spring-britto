@@ -25,9 +25,24 @@ public class BrittoDispatchServlet extends HttpServlet {
 
 	private static final long serialVersionUID = 1L;
 	
+	/*
+	 * O método "service" recebe requisições HTTP padrão, independente do método usado na requisição.
+	 * Como o Servlet recebe e trata toda e qualquer requisição, não existe a necessidade de usar
+	 * "doPost" ou "doGet" por exemplo. 
+	 * 
+	 * A primeira verificação que é feita garante que, caso a URL termine com "/favicon.ico", eu termino
+	 * o método sem fazer nada.
+	 * 
+	 * Depois, eu recupero dados da requisição (URL e Método HTTP) para poder encontrar a classe que irei trabalhar.
+	 * Ou seja, com esses dois valores, consigo montar a minha "key" para acessar o VALUE do meu HashMap ControllersMap.
+	 * Uma vez recuperado, posso armazenar em um RequestControllerData.
+	 * 
+	 * Logo depois, é verificado se já existe uma instância para esse Controller. Caso não exista, é criado dinamicamente.
+	 */
+	
 	@Override
 	protected void service(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-		//Preciso ignorar o FAVICON. O browser pede ele, mas eu só preciso da URL
+
 		if(request.getRequestURL().toString().endsWith("/favicon.ico")) {
 			return;
 		}
@@ -39,17 +54,10 @@ public class BrittoDispatchServlet extends HttpServlet {
 		String url = request.getRequestURI();
 		String httpMethod = request.getMethod().toUpperCase();
 		String key = httpMethod + url;
-		/*
-		 * A URI pega só o final da URL. Isso, somado com o método, me fornece a key pro meu HashMap de ControllersMap
-		 * Com ele, consigo criar um RequestControllerData
-		 */
+		
 		RequestControllerData data = ControllersMap.values.get(key);
 		BrittoLogger.log("BrittoDispatcherServlet", "URL: " + url + "(" + httpMethod + ") - Handler " + data.getControllerClass() + "." + data.getControllerMethod());
 		
-		/*
-		 * Verificação se existe uma instância da classe Controller correspondente
-		 * Se não houver uma instância desta classe, eu crio uma instância DINAMINCAMENTE
-		 */
 		Object controller;
 		BrittoLogger.log("DispatcherServlet", "Searching for Controller Instance");
 		try {
@@ -63,11 +71,11 @@ public class BrittoDispatchServlet extends HttpServlet {
 			}
 			
 			/*
-			 * Preciso extrair o método desta classe (da instância que eu acabei de criar dinamicamente caso ela já não exista
+			 * Preciso extrair o método desta classe (da instância que eu acabei de criar dinamicamente caso ela já não exista)
 			 * O método a ser extraído, é o método que irá atender à requisição
 			 * 
 			 * No método abaixo, eu basicamente percorro a lista de métodos maepados. Se algum deles bater com o método da 
-			 * requisição, então existe corr espondência
+			 * requisição, então existe correspondência
 			 */
 			
 			Method controllerMethod = null;
@@ -80,7 +88,7 @@ public class BrittoDispatchServlet extends HttpServlet {
 			BrittoLogger.log("DispatcherServlet", "Invoking method: " + controllerMethod.getName() + " to handle Request");
 			
 			/*
-			 * Meu método tem parâmetros?
+			 * Verificação da existência ou não de parâmetros no método Controller
 			 */
 			if(controllerMethod.getParameterCount() > 0) {
 				BrittoLogger.log("BrittoDispatchServlet", "Method " + controllerMethod.getName() + " has parameters");
@@ -92,7 +100,7 @@ public class BrittoDispatchServlet extends HttpServlet {
 					String body = readBytesFromRequest(request);
 					System.out.println(body.toString());
 					/*
-					 * Preciso ler os dados que vêm da Requisição
+					 * Leitura de dados do BODY da requisição
 					 */
 					BrittoLogger.log("", "     Found Parameter from Request of type " + parameter.getType().getName());
 					BrittoLogger.log("", "     Parameter content: " +  body);
@@ -104,12 +112,6 @@ public class BrittoDispatchServlet extends HttpServlet {
 					out.println(gson.toJson(controllerMethod.invoke(controller)));
 				}
 			}
-			
-			
-			/*
-			 * Eu invoco o método a partir da instância criada
-			 */
-			
 			out.close();
 		}
 		catch(Exception e) {
@@ -117,6 +119,9 @@ public class BrittoDispatchServlet extends HttpServlet {
 		}
 	}
 	
+	/*
+	 * Método responsável pela leitura de bytes da requisição. Uso este método para poder recuperar o BODY
+	 */
 	private String readBytesFromRequest(HttpServletRequest request) throws Exception {
 		StringBuilder str = new StringBuilder();
 		
@@ -128,6 +133,10 @@ public class BrittoDispatchServlet extends HttpServlet {
 		}
 		return str.toString();
 	}
+	
+	/*
+	 * Método responsável pela INJEÇÃO DE DEPENDÊNCIAS (semelhante ao @AutoWired)
+	 */
 	
 	private void injectDependencies(Object client) throws Exception {
 		for(Field f : client.getClass().getDeclaredFields()) {
