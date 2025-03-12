@@ -1,6 +1,6 @@
 # 🏗️ Spring Britto  
 
-Spring Britto é um framework web criado como um objeto de estudo, inspirado nas aulas do Professor Isidro na plataforma [IsiFlix](https://app.isiflix.com.br/). 
+Este é um Framework Web (carinhosamente apelidado de Spring Britto) criado como um objeto de estudo, desenvolvido com base nas aulas do Professor Isidro na plataforma [IsiFlix](https://app.isiflix.com.br/). 
 O projeto foi desenvolvido para aprofundar conceitos fundamentais de frameworks web Java, como injeção de dependências, mapeamento de requisições, logging personalizado, manipulação de metadados e o uso de um servlet único para capturar e processar requisições.
 
 ![Spring Britto](img/springbritto.jpeg)
