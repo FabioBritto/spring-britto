@@ -121,7 +121,7 @@ Caso tenha alguma dúvida sobre essa configuração, entre em contato.
 - **Estruturas de Dados (Grafos, HashMaps, etc.)**  
  
 
-📬 Me contate caso queira conversar sobre este ou outros projetos:
+📬 Me contate caso queira conversar sobre este ou outros projetos.
 
 ## 📬 Contato  
 📧 **E-mail:** [fabio.tritono@gmail.com](mailto:fabio.tritono@gmail.com)  
