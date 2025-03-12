@@ -15,7 +15,8 @@ public class ClassExplorer {
 	 * O parâmetro "Class<?> sourceClass" é passado desde a chamada do método inicial "run".
 	 */
 	public static List<String> retrieveAllClasses(Class<?> sourceClass){
-		return packageExplorer(sourceClass.getPackageName());
+		return packageExplorer(sourceClass.getPackage().getName());
+
 	}
 	
 	/*
